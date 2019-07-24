@@ -124,7 +124,7 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 }
 
 func (i *OpusReader) getPage() ([]byte, error) {
-	payload = make([]byte, 255)
+	payload := make([]byte, 255)
 	head := make([]byte, 4)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
 		return payload, err
