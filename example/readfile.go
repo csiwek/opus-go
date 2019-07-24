@@ -6,9 +6,9 @@ import (
 )
 
 func main() {
-	_, err := opus.NewFile("output.opus")
+	_, err := opus.NewFile("../output.opus")
 	if err != nil {
-		fmt.Printf("Could not open file\n")
+		fmt.Printf("Could not open file %v\n", err.Error())
 	}
 
 }

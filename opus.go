@@ -1,14 +1,13 @@
 package opus
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"hash/crc32"
 	"io"
-	//       "math/rand"
-	"bufio"
-	"bytes"
-	"encoding/hex"
 	"io/ioutil"
 	"os"
 )
@@ -124,8 +123,8 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 }
 
 func (i *OpusReader) getPage() ([]byte, error) {
-	payload := make([]byte, 255)
-	head := make([]byte, 1)
+	payload := make([]byte, 1)
+	head := make([]byte, 4)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
 		return payload, err
 	}
