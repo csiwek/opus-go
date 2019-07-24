@@ -39,7 +39,14 @@ func NewFile(fileName string) (*OpusReader, error) {
 	//}
 	reader.fd = f
 	reader.stream = bufio.NewReader(f)
-	reader.GetRTP()
+	_, err := i.getPage()
+	if err != nil {
+		return reader, err
+	}
+	_, err = i.getPage()
+	if err != nil {
+		return reader, err
+	}
 	return reader, nil
 }
 
@@ -192,31 +199,11 @@ func (i *OpusReader) getPage() (uint8, error) {
 	return headerType, nil
 }
 
-func (i *OpusReader) GetRTP() error {
-	_, err := i.getPage()
+func (i *OpusReader) GetSample() ([]byte, error) {
+	payload, err = i.getPage()
 	if err != nil {
-		fmt.Printf("Error 1: %v\n", err)
-	}
-	fmt.Println()
-	_, err = i.getPage()
-	if err != nil {
-		fmt.Printf("Error 2: %v\n", err)
-	}
-	fmt.Println()
-	_, err = i.getPage()
-	if err != nil {
-		fmt.Printf("Error 3: %v\n", err)
-	}
-	fmt.Println()
-	_, err = i.getPage()
-	if err != nil {
-		fmt.Printf("Error 4: %v\n", err)
-	}
-	fmt.Println()
-	_, err = i.getPage()
-	if err != nil {
-		fmt.Printf("Error 5: %v\n", err)
+		return nil, err
 	}
 
-	return nil
+	return payload, nil
 }

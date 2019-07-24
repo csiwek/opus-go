@@ -1,11 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	opus "github.com/csiwek/opus-go"
+)
 
 func main() {
-
-	_, err := NewFile("output.opus")
+	_, err := opus.NewFile("output.opus")
 	if err != nil {
-		fmt.Printf("Could not open file: %v", err.Error())
+		fmt.Printf("Could not open file\n")
 	}
+
 }
