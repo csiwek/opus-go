@@ -125,7 +125,7 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 
 func (i *OpusReader) getPage() ([]byte, error) {
 	payload := make([]byte, 255)
-	head := make([]byte, 4)
+	head := make([]byte, 1)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
 		return payload, err
 	}
@@ -190,8 +190,10 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		fmt.Printf("plen : %v\n", plen)
 		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-30))
 	} else {
+		tmpPacket := make([]byte, payloadLen-8)
+		binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 		fmt.Printf("an audio frame\n")
-		io.CopyN(payload, i.stream, int64(payloadLen-8))
+		return tmpPacket, nil
 	}
 
 	fmt.Printf("payloadLen: %v\n", payloadLen)
