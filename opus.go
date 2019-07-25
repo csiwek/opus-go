@@ -24,6 +24,7 @@ type OpusReader struct {
 	checksumTable           *crc32.Table
 	previousGranulePosition uint64
 	currentSampleLen        uint32
+	currentSamples          uint32
 }
 
 // New builds a new OGG Opus reader
@@ -214,10 +215,14 @@ func (i *OpusReader) GetSample() ([]byte, error) {
 }
 
 func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePosition uint64) (uint32, error) {
-	samples := granulePosition - previousGranulePosition
+	i.currentSamples = uint32(granulePosition - previousGranulePosition)
 	if i.sampleRate == 0 {
 		return 0, errors.New("Wrong samplerate")
 	}
-	deltaTime := samples * 1000 / uint64(i.sampleRate)
+	deltaTime := i.currentSamples * 1000 / i.sampleRate
 	return uint32(deltaTime), nil
+}
+
+func (i *OpusReader) getCurrentSamples() uint32 {
+	return i.currentSamples
 }
