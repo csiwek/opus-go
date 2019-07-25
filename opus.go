@@ -22,7 +22,7 @@ type OpusReader struct {
 	pageIndex               uint32
 	checksumTable           *crc32.Table
 	previousGranulePosition uint64
-	timestamp               uint32
+	currentSampleLen        uint32
 }
 
 // New builds a new OGG Opus reader
@@ -150,7 +150,8 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 	fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-	i.calculateSampleDuration(i.previousGranulePosition, granulePosition)
+	i.currentSampleLen, _ = i.calculateSampleDuration(i.previousGranulePosition, granulePosition)
+	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
 	i.previousGranulePosition = granulePosition
 
 	//skipping checksum
@@ -211,9 +212,8 @@ func (i *OpusReader) GetSample() ([]byte, error) {
 	return payload, nil
 }
 
-func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePosition uint64) error {
+func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePosition uint64) (uint32, error) {
 	samples := granulePosition - previousGranulePosition
-	fmt.Printf("Samples: %v", samples)
-	//deltaTime := samples / sampleRate
-	return nil
+	deltaTime := samples * 1000 / uint64(i.sampleRate)
+	return uint32(deltaTime), nil
 }
