@@ -14,15 +14,15 @@ import (
 
 // OpusReader is used to take an OGG file and write RTP packets
 type OpusReader struct {
-	stream          io.Reader
-	fd              *os.File
-	sampleRate      uint32
-	channelCount    uint16
-	serial          uint32
-	pageIndex       uint32
-	checksumTable   *crc32.Table
-	granulePosition uint64
-	timestamp       uint32
+	stream                  io.Reader
+	fd                      *os.File
+	sampleRate              uint32
+	channelCount            uint16
+	serial                  uint32
+	pageIndex               uint32
+	checksumTable           *crc32.Table
+	previousGranulePosition uint64
+	timestamp               uint32
 }
 
 // New builds a new OGG Opus reader
@@ -71,12 +71,11 @@ func (i *OpusReader) readOpusHead() (uint32, error) {
 	plen += 2
 	fmt.Printf("preSkip: %v\n", preSkip)
 
-	var sampleRate uint32
-	if err := binary.Read(i.stream, binary.LittleEndian, &sampleRate); err != err {
+	if err := binary.Read(i.stream, binary.LittleEndian, &i.sampleRate); err != err {
 		return 0, err
 	}
 	plen += 4
-	fmt.Printf("SamlpleRate: %v\n", sampleRate)
+	fmt.Printf("SamlpleRate: %v\n", i.sampleRate)
 	//Skipping OutputGain
 	io.CopyN(ioutil.Discard, i.stream, 2)
 	plen += 2
@@ -138,10 +137,11 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 	fmt.Printf("headerType: %v\n", headerType)
-	if err := binary.Read(i.stream, binary.LittleEndian, &i.granulePosition); err != err {
+	var granulePosition uint64
+	if err := binary.Read(i.stream, binary.LittleEndian, &granulePosition); err != err {
 		return payload, err
 	}
-	fmt.Printf("i.granulePosition: %v\n", i.granulePosition)
+	fmt.Printf("i.granulePosition: %v\n", granulePosition)
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.serial); err != err {
 		return payload, err
 	}
@@ -150,6 +150,8 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 	fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
+	i.calculateSampleDuration(i.previousGranulePosition, granulePosition)
+	i.previousGranulePosition = granulePosition
 
 	//skipping checksum
 	io.CopyN(ioutil.Discard, i.stream, 4)
@@ -207,4 +209,11 @@ func (i *OpusReader) GetSample() ([]byte, error) {
 	}
 
 	return payload, nil
+}
+
+func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePosition uint64) error {
+	samples := granulePosition - previousGranulePosition
+	fmt.Printf("Samples: %v", samples)
+	//deltaTime := samples / sampleRate
+	return nil
 }
