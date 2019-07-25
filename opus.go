@@ -223,6 +223,6 @@ func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePos
 	return uint32(deltaTime), nil
 }
 
-func (i *OpusReader) getCurrentSamples() uint32 {
+func (i *OpusReader) GetCurrentSamples() uint32 {
 	return i.currentSamples
 }
