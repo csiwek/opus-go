@@ -214,6 +214,9 @@ func (i *OpusReader) GetSample() ([]byte, error) {
 
 func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePosition uint64) (uint32, error) {
 	samples := granulePosition - previousGranulePosition
+	if i.sampleRate == 0 {
+		return 0, err.Error("Wrong samplerate")
+	}
 	deltaTime := samples * 1000 / uint64(i.sampleRate)
 	return uint32(deltaTime), nil
 }
