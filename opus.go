@@ -276,8 +276,10 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	if i.currentSegment == i.segments {
 		i.currentSegment = 0
-	}
+	} else {
+		i.currentSegment += 1
 
+	}
 	return tmpPacket, nil
 }
 
