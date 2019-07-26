@@ -52,7 +52,7 @@ func NewFile(fileName string) (*OpusReader, error) {
 	if err != nil {
 		return reader, err
 	}
-
+	reader.segmentMap = make(map[uint8]uint8)
 	return reader, nil
 }
 
