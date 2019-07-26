@@ -44,6 +44,11 @@ func NewFile(fileName string) (*OpusReader, error) {
 	if err != nil {
 		return reader, err
 	}
+	_, err = reader.getPage()
+	if err != nil {
+		return reader, err
+	}
+
 	return reader, nil
 }
 
@@ -189,21 +194,19 @@ func (i *OpusReader) getPage() ([]byte, error) {
 	fmt.Printf("payloadLen 0: %v\n", payloadLen)
 	fmt.Printf("segments: %v\n", segments)
 
-	if headerType == 2 {
+	if i.pageIndex == 0 {
+
 		_, err := i.readOpusHead()
 		if err != nil {
 			fmt.Printf("Read Headers Error : %v\n", err)
 		}
+	} else if i.pageIndex == 1 {
 		plen, err := i.readOpusTags()
 		if err != nil {
 			fmt.Printf("ReadTags Error : %v\n", err)
 		}
 		// we are not interested in tags (metadata?)
 		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen))
-
-	} else if headerType == 1 {
-		//last page
-		fmt.Printf("last page\n")
 
 	} else {
 		tmpPacket := make([]byte, payloadLen)
