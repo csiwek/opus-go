@@ -116,12 +116,10 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 		return 0, err
 	}
 	fmt.Printf("VendorLen: %v\n", vendorLen)
-	plen = plen + 4
 	vendorName := make([]byte, vendorLen)
 	if err := binary.Read(i.stream, binary.LittleEndian, &vendorName); err != err {
 		return 0, err
 	}
-	plen = plen + vendorLen
 	fmt.Printf("Vendor Name: %v\n", string(vendorName))
 
 	var userCommentLen uint32
@@ -129,14 +127,12 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 		return 0, err
 	}
 	fmt.Printf("userCommentLen: %v\n", userCommentLen)
-	plen = plen + 4
 	userComment := make([]byte, userCommentLen)
 	if err := binary.Read(i.stream, binary.LittleEndian, &userComment); err != err {
 		return 0, err
 	}
-	plen = plen + userCommentLen
 	fmt.Printf("UserComment: %v\n", string(userComment))
-
+	plen = 16 + vendorLen + userCommentLen
 	return plen, nil
 
 }
@@ -206,7 +202,7 @@ func (i *OpusReader) getPage() ([]byte, error) {
 			fmt.Printf("ReadTags Error : %v\n", err)
 		}
 		// we are not interested in tags (metadata?)
-		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen-8))
+		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen))
 
 	} else {
 		tmpPacket := make([]byte, payloadLen)
