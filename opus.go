@@ -224,5 +224,6 @@ func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePos
 }
 
 func (i *OpusReader) GetCurrentSamples() uint32 {
+	fmt.Printf("current samples: %v\n", i.currentSamples)
 	return i.currentSamples
 }
