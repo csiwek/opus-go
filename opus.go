@@ -54,6 +54,14 @@ func NewFile(fileName string) (*OpusReader, error) {
 func (i *OpusReader) readOpusHead() (uint32, error) {
 	var plen uint32
 	var version uint8
+	magic := make([]byte, 8)
+	if err := binary.Read(i.stream, binary.LittleEndian, &magic); err != err {
+		return 0, err
+	}
+	if bytes.Compare(magic, []byte("OpusHead")) != 0 {
+		return 0, errors.New("Wrong Opus Head")
+	}
+
 	if err := binary.Read(i.stream, binary.LittleEndian, &version); err != err {
 		return 0, err
 	}
@@ -94,6 +102,14 @@ func (i *OpusReader) readOpusHead() (uint32, error) {
 func (i *OpusReader) readOpusTags() (uint32, error) {
 	var plen uint32
 	var vendorLen uint32
+	magic := make([]byte, 8)
+	if err := binary.Read(i.stream, binary.LittleEndian, &magic); err != err {
+		return 0, err
+	}
+	if bytes.Compare(magic, []byte("OpusTags")) != 0 {
+		return 0, errors.New("Wrong Opus Tags")
+	}
+
 	if err := binary.Read(i.stream, binary.LittleEndian, &vendorLen); err != err {
 		return 0, err
 	}
@@ -175,26 +191,25 @@ func (i *OpusReader) getPage() ([]byte, error) {
 
 	fmt.Printf("payloadLen 0: %v\n", payloadLen)
 	fmt.Printf("segments: %v\n", segments)
-	magic := make([]byte, 8)
-	if err := binary.Read(i.stream, binary.LittleEndian, &magic); err != err {
-		return payload, err
-	}
-	if bytes.Compare(magic, []byte("OpusHead")) == 0 {
-		plen, err := i.readOpusHead()
+
+	if headerType == 2 {
+		_, err := i.readOpusHead()
 		if err != nil {
 			fmt.Printf("Read Headers Error : %v\n", err)
 		}
-
-		fmt.Printf("plen : %v\n", plen)
-	} else if bytes.Compare(magic, []byte("OpusTags")) == 0 {
 		plen, err := i.readOpusTags()
 		if err != nil {
 			fmt.Printf("ReadTags Error : %v\n", err)
 		}
-		fmt.Printf("plen : %v\n", plen)
-		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen-8))
+		// we are not interested in tags (metadata?)
+		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen))
+
+	} else if headerType == 1 {
+		//last page
+		fmt.Printf("last page\n")
+
 	} else {
-		tmpPacket := make([]byte, payloadLen-8)
+		tmpPacket := make([]byte, payloadLen)
 		binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 		fmt.Printf("an audio frame\n")
 		return tmpPacket, nil
