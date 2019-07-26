@@ -206,7 +206,7 @@ func (i *OpusReader) getPage() ([]byte, error) {
 			fmt.Printf("ReadTags Error : %v\n", err)
 		}
 		// we are not interested in tags (metadata?)
-		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen+8))
+		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen-8))
 
 	} else {
 		tmpPacket := make([]byte, payloadLen)
