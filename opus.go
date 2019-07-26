@@ -192,7 +192,7 @@ func (i *OpusReader) getPage() ([]byte, error) {
 			fmt.Printf("ReadTags Error : %v\n", err)
 		}
 		fmt.Printf("plen : %v\n", plen)
-		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-30))
+		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen-8))
 	} else {
 		tmpPacket := make([]byte, payloadLen-8)
 		binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
