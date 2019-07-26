@@ -44,10 +44,6 @@ func NewFile(fileName string) (*OpusReader, error) {
 	if err != nil {
 		return reader, err
 	}
-	_, err = reader.getPage()
-	if err != nil {
-		return reader, err
-	}
 	return reader, nil
 }
 
