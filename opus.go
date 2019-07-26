@@ -25,6 +25,10 @@ type OpusReader struct {
 	previousGranulePosition uint64
 	currentSampleLen        uint32
 	currentSamples          uint32
+	currentSegment          uint8
+	segments                uint8
+	currentSample           uint8
+	segmentMap              map[uint8]uint8
 }
 
 // New builds a new OGG Opus reader
@@ -216,8 +220,78 @@ func (i *OpusReader) getPage() ([]byte, error) {
 	return payload, nil
 }
 
+func (i *OpusReader) getPageSingle() ([]byte, error) {
+	if i.currentSegment == 0 {
+		payload := make([]byte, 1)
+		head := make([]byte, 4)
+		if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
+			return payload, err
+		}
+		if bytes.Compare(head, []byte("OggS")) != 0 {
+			return payload, fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
+		}
+		//Skipping Version
+		io.CopyN(ioutil.Discard, i.stream, 1)
+		var headerType uint8
+		if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
+			return payload, err
+		}
+		fmt.Printf("headerType: %v\n", headerType)
+		var granulePosition uint64
+		if err := binary.Read(i.stream, binary.LittleEndian, &granulePosition); err != err {
+			return payload, err
+		}
+		fmt.Printf("i.granulePosition: %v\n", granulePosition)
+		if err := binary.Read(i.stream, binary.LittleEndian, &i.serial); err != err {
+			return payload, err
+		}
+		fmt.Printf("i.serial: %v\n", i.serial)
+		if err := binary.Read(i.stream, binary.LittleEndian, &i.pageIndex); err != err {
+			return payload, err
+		}
+		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
+		i.currentSampleLen, _ = i.calculateSampleDuration(i.previousGranulePosition, granulePosition)
+		fmt.Printf("Sample len : %v\n", i.currentSampleLen)
+		i.previousGranulePosition = granulePosition
+
+		//skipping checksum
+		io.CopyN(ioutil.Discard, i.stream, 4)
+
+		if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
+			return payload, err
+		}
+		var x uint8
+		for x = 1; x <= i.segments; x++ {
+			var segSize uint8
+			if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
+				return payload, err
+			}
+			fmt.Printf("Seg %d size: %v\n", x, segSize)
+			i.segmentMap[x] = segSize
+		}
+		i.currentSegment = 1
+	}
+
+	tmpPacket := make([]byte, i.segmentMap[i.currentSegment])
+	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
+	if i.currentSegment == i.segments {
+		i.currentSegment = 0
+	}
+
+	return tmpPacket, nil
+}
+
 func (i *OpusReader) GetSample() ([]byte, error) {
 	payload, err := i.getPage()
+	if err != nil {
+		return nil, err
+	}
+
+	return payload, nil
+}
+
+func (i *OpusReader) GetSingleSample() ([]byte, error) {
+	payload, err := i.getPageSingle()
 	if err != nil {
 		return nil, err
 	}
