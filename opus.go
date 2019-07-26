@@ -107,7 +107,7 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 		return 0, err
 	}
 	if bytes.Compare(magic, []byte("OpusTags")) != 0 {
-		fmt.Printf("Incorrect magic \"OpusTags\" : %s %v", string(magic), hex.EncodeToString(magic))
+		fmt.Printf("Incorrect magic \"OpusTags\" : %s %v\n", string(magic), hex.EncodeToString(magic))
 		return 0, errors.New("Wrong Opus Tags")
 	}
 
