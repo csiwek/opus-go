@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	opusfile, err := opus.NewFile("radio1.opus")
+	opusfile, err := opus.NewFile("ff-16b-2c-44100hz.opus")
 	if err != nil {
 		fmt.Printf("Could not open file %v\n", err.Error())
 	}
