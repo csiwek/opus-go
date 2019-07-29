@@ -100,7 +100,12 @@ func (i *OpusReader) readOpusHead() (uint32, error) {
 	}
 	plen += 2
 	fmt.Printf("ChannelMap : %v\n", channelMap)
+	//if channelMap (Mapping family) is different than 0, next 4 bytes contain channel mapping configuration
 
+	if channelMap != 0 {
+		io.CopyN(ioutil.Discard, i.stream, 4)
+		plen += 4
+	}
 	return plen, nil
 }
 
@@ -291,8 +296,31 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		toc := tmpPacket[0] >> 3
 		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
 		fmt.Printf("============= TOC Dec value : %d \n", toc)
+		fmt.Printf("============= frameSize : %f \n", getFrameSize(uint8(toc)))
 	}
 	return tmpPacket, nil
+}
+
+//Returns Frame size in ms based on Configuration number
+func getFrameSize(toc uint8) float64 {
+	var frameSize float64
+	// https://tools.ietf.org/html/rfc6716
+	switch toc {
+	case 16, 20, 24, 28:
+		frameSize = 2.5
+	case 17, 21, 25, 29:
+		frameSize = 5
+	case 0, 4, 8, 12, 14, 18, 22, 26, 30:
+		frameSize = 10
+	case 1, 5, 9, 13, 15, 19, 23, 27, 31:
+		frameSize = 20
+	case 2, 6, 10:
+		frameSize = 40
+	case 3, 7, 11:
+		frameSize = 60
+	}
+	return frameSize
+
 }
 
 func (i *OpusReader) GetSample() ([]byte, error) {
