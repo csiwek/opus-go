@@ -293,8 +293,8 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		}
 	}
 
-	//fmt.Printf("reading segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
-
+	fmt.Printf("Current packet size: %v \n", currentPacketSize)
+	
 	tmpPacket := make([]byte, currentPacketSize)
 
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)

@@ -11,6 +11,9 @@ func main() {
 		fmt.Printf("Could not open file %v\n", err.Error())
 	}
 	for i := 0; i < 100; i++ {
-		opusfile.GetSingleSample()
+		_, err := opusfile.GetSingleSample()
+		if err != nil {
+			fmt.Printf("GetSingleSample returned Errr %v\n", err.Error())
+		}
 	}
 }
