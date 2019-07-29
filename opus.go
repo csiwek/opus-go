@@ -213,6 +213,8 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		tmpPacket := make([]byte, payloadLen)
 		binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 		fmt.Printf("an audio frame\n")
+		//Reading the TOC byte - we need to know  the frame duration.
+		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
 		return tmpPacket, nil
 	}
 
