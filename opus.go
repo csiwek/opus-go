@@ -310,6 +310,10 @@ func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint32) (uint3
 	if i.sampleRate == 0 {
 		return 0, errors.New("Wrong samplerate")
 	}
+	if i.segments == 0 {
+		return 0, errors.New("Wrong number of segments")
+	}
+
 	deltaTime := i.currentSamples * 1000 / i.sampleRate / uint32(i.segments)
 	return uint32(deltaTime), nil
 }
