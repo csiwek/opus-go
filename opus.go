@@ -275,17 +275,25 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		}
 		i.currentSegment = 1
 	}
+	var currentPacketSize uint32
 
-	fmt.Printf("reading segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
-	tmpPacket := make([]byte, i.segmentMap[i.currentSegment])
-
-	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	if i.currentSegment == i.segments {
 		i.currentSegment = 0
 	} else {
+		for i.segmentMap[i.currentSegment] == 255 {
+			i.currentSegment += 1
+			currentPacketSize += 255
+		}
+		//last lacing packet
+		currentPacketSize += uint32(i.segmentMap[i.currentSegment])
 		i.currentSegment += 1
-
 	}
+
+	fmt.Printf("reading segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
+
+	tmpPacket := make([]byte, currentPacketSize)
+
+	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	//Reading the TOC byte - we need to know  the frame duration.
 	if len(tmpPacket) > 0 {
 		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
