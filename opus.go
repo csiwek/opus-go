@@ -304,6 +304,7 @@ func (i *OpusReader) GetSingleSample() ([]byte, error) {
 
 func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint16) (uint32, error) {
 	i.currentSamples = uint32(deltaGranulePosition)
+	fmt.Printf("calculating sample duration for packets: %v\n", i.currentSamples)
 	if i.sampleRate == 0 {
 		return 0, errors.New("Wrong samplerate")
 	}
