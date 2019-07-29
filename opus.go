@@ -307,6 +307,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		fmt.Printf("============= frameSize : %f \n", getFrameSize(uint8(toc)))
 		i.currentSampleLen = getFrameSize(uint8(toc))
 	}
+	fmt.Printf("Current segment %v \n", i.currentSegment)
 	return tmpPacket, nil
 }
 
