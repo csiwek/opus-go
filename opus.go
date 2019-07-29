@@ -23,7 +23,7 @@ type OpusReader struct {
 	pageIndex               uint32
 	checksumTable           *crc32.Table
 	previousGranulePosition uint64
-	currentSampleLen        uint32
+	currentSampleLen        float32
 	currentSamples          uint32
 	currentSegment          uint8
 	segments                uint8
@@ -183,8 +183,6 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 
-	i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
-	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
 	i.previousGranulePosition = granulePosition
 
 	var payloadLen uint32
@@ -264,8 +262,6 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
 			return payload, err
 		}
-		i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
-		fmt.Printf("Sample len : %vms\n", i.currentSampleLen)
 		i.previousGranulePosition = granulePosition
 
 		var x uint8
@@ -297,13 +293,14 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
 		fmt.Printf("============= TOC Dec value : %d \n", toc)
 		fmt.Printf("============= frameSize : %f \n", getFrameSize(uint8(toc)))
+		i.currentSampleLen = getFrameSize(uint8(toc))
 	}
 	return tmpPacket, nil
 }
 
 //Returns Frame size in ms based on Configuration number
-func getFrameSize(toc uint8) float64 {
-	var frameSize float64
+func getFrameSize(toc uint8) float32 {
+	var frameSize float32
 	// https://tools.ietf.org/html/rfc6716
 	switch toc {
 	case 16, 20, 24, 28:
@@ -361,7 +358,7 @@ func (i *OpusReader) GetCurrentSamples() uint32 {
 }
 
 // Returns duration in ms of current sample
-func (i *OpusReader) GetCurrentSampleDuration() uint32 {
+func (i *OpusReader) GetCurrentSampleDuration() float32 {
 	fmt.Printf("current sample duration: %v\n", i.currentSampleLen)
 	return i.currentSampleLen
 }
