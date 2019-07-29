@@ -278,7 +278,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	var currentPacketSize uint32
 
 	for i.segmentMap[i.currentSegment] == 255 {
-		fmt.Printf("This packet has more segments: %v\n", i.currentSegment, i.segmentMap[i.currentSegment])
+		fmt.Printf("This packet has more segments: %v    %v\n", i.currentSegment, i.segmentMap[i.currentSegment])
 		currentPacketSize += 255
 		i.currentSegment += 1
 
