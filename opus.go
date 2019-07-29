@@ -286,8 +286,9 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 
 	}
 	//Reading the TOC byte - we need to know  the frame duration.
-	fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
-
+	if len(tmpPacket) > 0 {
+		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
+	}
 	return tmpPacket, nil
 }
 
