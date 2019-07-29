@@ -170,10 +170,6 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 	fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-	i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
-	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
-	i.previousGranulePosition = granulePosition
-
 	//skipping checksum
 	io.CopyN(ioutil.Discard, i.stream, 4)
 
@@ -181,6 +177,11 @@ func (i *OpusReader) getPage() ([]byte, error) {
 	if err := binary.Read(i.stream, binary.LittleEndian, &segments); err != err {
 		return payload, err
 	}
+
+	i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
+	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
+	i.previousGranulePosition = granulePosition
+
 	var payloadLen uint32
 	for x := 1; x <= int(segments); x++ {
 		var segSize uint8
@@ -250,15 +251,16 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 			return payload, err
 		}
 		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-		i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
-		fmt.Printf("Sample len : %vms\n", i.currentSampleLen)
-		i.previousGranulePosition = granulePosition
 		//skipping checksum
 		io.CopyN(ioutil.Discard, i.stream, 4)
 
 		if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
 			return payload, err
 		}
+		i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
+		fmt.Printf("Sample len : %vms\n", i.currentSampleLen)
+		i.previousGranulePosition = granulePosition
+
 		var x uint8
 		for x = 1; x <= i.segments; x++ {
 			var segSize uint8
