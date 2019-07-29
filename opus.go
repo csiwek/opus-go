@@ -287,7 +287,10 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	}
 	//Reading the TOC byte - we need to know  the frame duration.
 	if len(tmpPacket) > 0 {
+		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
+		toc := tmpPacket[0] >> 3
 		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
+		fmt.Printf("============= TOC Dec value : %d \n", toc)
 	}
 	return tmpPacket, nil
 }
