@@ -170,7 +170,7 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 	fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-	i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.previousGranulePosition - granulePosition))
+	i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
 	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
 	i.previousGranulePosition = granulePosition
 
@@ -250,7 +250,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 			return payload, err
 		}
 		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-		i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.previousGranulePosition - granulePosition))
+		i.currentSampleLen, _ = i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
 		fmt.Printf("Sample len : %vms\n", i.currentSampleLen)
 		i.previousGranulePosition = granulePosition
 		//skipping checksum
@@ -302,7 +302,7 @@ func (i *OpusReader) GetSingleSample() ([]byte, error) {
 	return payload, nil
 }
 
-func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint16) (uint32, error) {
+func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint32) (uint32, error) {
 	i.currentSamples = uint32(deltaGranulePosition)
 	fmt.Printf("calculating sample duration for packets: %v\n", i.currentSamples)
 	if i.sampleRate == 0 {
