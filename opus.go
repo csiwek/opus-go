@@ -314,3 +314,9 @@ func (i *OpusReader) GetCurrentSamples() uint32 {
 	fmt.Printf("current samples: %v\n", i.currentSamples)
 	return i.currentSamples
 }
+
+// Returns duration in ms of current sample
+func (i *OpusReader) GetCurrentSampleDuration() uint32 {
+	fmt.Printf("current sample duration: %v\n", i.currentSampleLen)
+	return i.currentSampleLen
+}
