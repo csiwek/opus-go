@@ -251,6 +251,8 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		}
 		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
 		i.previousGranulePosition = granulePosition
+		i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.previousGranulePosition - granulePosition))
+		fmt.Printf("Sample len : %vms\n", i.currentSampleLen)
 
 		//skipping checksum
 		io.CopyN(ioutil.Discard, i.stream, 4)
@@ -272,8 +274,6 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 
 	fmt.Printf("reading segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
 	tmpPacket := make([]byte, i.segmentMap[i.currentSegment])
-	i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.segmentMap[i.currentSegment]))
-	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
 
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	if i.currentSegment == i.segments {
