@@ -261,6 +261,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
 			return payload, err
 		}
+		i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
 		i.previousGranulePosition = granulePosition
 
 		var x uint8
@@ -275,7 +276,6 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		i.currentSegment = 1
 	}
 	var currentPacketSize uint32
-
 	for i.segmentMap[i.currentSegment] == 255 {
 		fmt.Printf("This packet has more segments: %v    %v\n", i.currentSegment, i.segmentMap[i.currentSegment])
 		currentPacketSize += 255
