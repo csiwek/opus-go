@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	opusfile, err := opus.NewFile("music.opus")
+	opusfile, err := opus.NewFile("radio1.opus")
 	if err != nil {
 		fmt.Printf("Could not open file %v\n", err.Error())
 	}
@@ -14,4 +14,63 @@ func main() {
 	opusfile.GetSingleSample()
 	opusfile.GetSingleSample()
 	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+			opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+
+opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+
+opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+
+			opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+
+opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+
+opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+
+
 }
