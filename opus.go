@@ -170,7 +170,7 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return payload, err
 	}
 	fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-	i.currentSampleLen, _ = i.calculateSampleDuration(i.previousGranulePosition, granulePosition)
+	i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.previousGranulePosition - granulePosition))
 	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
 	i.previousGranulePosition = granulePosition
 
@@ -250,8 +250,6 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 			return payload, err
 		}
 		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-		i.currentSampleLen, _ = i.calculateSampleDuration(i.previousGranulePosition, granulePosition)
-		fmt.Printf("Sample len : %v\n", i.currentSampleLen)
 		i.previousGranulePosition = granulePosition
 
 		//skipping checksum
@@ -274,6 +272,9 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 
 	fmt.Printf("reading segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
 	tmpPacket := make([]byte, i.segmentMap[i.currentSegment])
+	i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.segmentMap[i.currentSegment]))
+	fmt.Printf("Sample len : %v\n", i.currentSampleLen)
+
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	if i.currentSegment == i.segments {
 		i.currentSegment = 0
@@ -302,8 +303,8 @@ func (i *OpusReader) GetSingleSample() ([]byte, error) {
 	return payload, nil
 }
 
-func (i *OpusReader) calculateSampleDuration(previousGranulePosition, granulePosition uint64) (uint32, error) {
-	i.currentSamples = uint32(granulePosition - previousGranulePosition)
+func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint16) (uint32, error) {
+	i.currentSamples = uint32(deltaGranulePosition)
 	if i.sampleRate == 0 {
 		return 0, errors.New("Wrong samplerate")
 	}
