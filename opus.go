@@ -277,20 +277,25 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	}
 	var currentPacketSize uint32
 
+	for i.segmentMap[i.currentSegment] == 255 {
+		fmt.Printf("This packet has more segments: %v\n", i.currentSegment, i.segmentMap[i.currentSegment])
+		currentPacketSize += 255
+		i.currentSegment += 1
+
+	}  
+
+
 	if i.currentSegment == i.segments {
 		i.currentSegment = 0
+	} 
+
+	
+	currentPacketSize += uint32(i.segmentMap[i.currentSegment])
+	fmt.Printf("Adding last packet packet from segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
+	if i.currentSegment < i.segments {
+		i.currentSegment += 1
 	} else {
-		for i.segmentMap[i.currentSegment] == 255 {
-			i.currentSegment += 1
-			currentPacketSize += 255
-			fmt.Printf("Adding lacing packet from segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
-		}
-		//last lacing packet
-		currentPacketSize += uint32(i.segmentMap[i.currentSegment])
-		fmt.Printf("Adding last packet packet from segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
-		if i.currentSegment < i.segments {
-			i.currentSegment += 1
-		}
+		i.currentSegment = 0
 	}
 
 	fmt.Printf("Current packet size: %v \n", currentPacketSize)
