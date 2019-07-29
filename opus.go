@@ -250,10 +250,9 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 			return payload, err
 		}
 		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
-		i.previousGranulePosition = granulePosition
 		i.currentSampleLen, _ = i.calculateSampleDuration(uint16(i.previousGranulePosition - granulePosition))
 		fmt.Printf("Sample len : %vms\n", i.currentSampleLen)
-
+		i.previousGranulePosition = granulePosition
 		//skipping checksum
 		io.CopyN(ioutil.Discard, i.stream, 4)
 
