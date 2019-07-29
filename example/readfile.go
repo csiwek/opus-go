@@ -6,9 +6,12 @@ import (
 )
 
 func main() {
-	_, err := opus.NewFile("../output.opus")
+	opusfile, err := opus.NewFile("music.opus")
 	if err != nil {
 		fmt.Printf("Could not open file %v\n", err.Error())
 	}
-
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
+	opusfile.GetSingleSample()
 }
