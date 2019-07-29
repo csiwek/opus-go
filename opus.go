@@ -221,7 +221,6 @@ func (i *OpusReader) getPage() ([]byte, error) {
 		return tmpPacket, nil
 	}
 
-	fmt.Printf("payloadLen: %v\n", payloadLen)
 
 	return payload, nil
 }
@@ -285,7 +284,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	}
 
 	currentPacketSize += uint32(i.segmentMap[i.currentSegment])
-	fmt.Printf("Adding last packet packet from segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
+	fmt.Printf("Adding  packet from segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
 	if i.currentSegment < i.segments {
 		i.currentSegment += 1
 	} else {
@@ -301,9 +300,9 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	if len(tmpPacket) > 0 {
 		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
 		toc := tmpPacket[0] >> 3
-		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
-		fmt.Printf("============= TOC Dec value : %d \n", toc)
-		fmt.Printf("============= frameSize : %f \n", getFrameSize(uint8(toc)))
+//		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
+//		fmt.Printf("============= TOC Dec value : %d \n", toc)
+//		fmt.Printf("============= frameSize : %f \n", getFrameSize(uint8(toc)))
 		i.currentSampleLen = getFrameSize(uint8(toc))
 	}
 	fmt.Printf("Current segment %v \n", i.currentSegment)
@@ -371,6 +370,5 @@ func (i *OpusReader) GetCurrentSamples() uint32 {
 
 // Returns duration in ms of current sample
 func (i *OpusReader) GetCurrentSampleDuration() float32 {
-	fmt.Printf("current sample duration: %v\n", i.currentSampleLen)
 	return i.currentSampleLen
 }
