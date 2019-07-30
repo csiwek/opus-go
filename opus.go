@@ -229,20 +229,16 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
 			return payload, err
 		}
-		fmt.Printf("headerType: %v\n", headerType)
 		var granulePosition uint64
 		if err := binary.Read(i.stream, binary.LittleEndian, &granulePosition); err != err {
 			return payload, err
 		}
-		fmt.Printf("i.granulePosition: %v\n", granulePosition)
 		if err := binary.Read(i.stream, binary.LittleEndian, &i.serial); err != err {
 			return payload, err
 		}
-		fmt.Printf("i.serial: %v\n", i.serial)
 		if err := binary.Read(i.stream, binary.LittleEndian, &i.pageIndex); err != err {
 			return payload, err
 		}
-		fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
 		//skipping checksum
 		io.CopyN(ioutil.Discard, i.stream, 4)
 
@@ -259,7 +255,6 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 			if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
 				return payload, err
 			}
-			fmt.Printf("Seg %d size: %v\n", x, segSize)
 			i.segmentMap[x] = segSize
 		}
 		i.currentSegment = 1
