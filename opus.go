@@ -281,7 +281,8 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
 		toc := tmpPacket[0] >> 3
 		i.currentSampleLen = getFrameSize(uint8(toc))
-		tocType := tmpPacket[0] & 3
+		tmptoc := tmpPacket[0] & 255;
+		tocType := tmptoc & 3
 		fmt.Printf("TOC type: %v\n", tocType)
 	}
 	return tmpPacket, nil
