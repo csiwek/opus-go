@@ -161,20 +161,16 @@ func (i *OpusReader) getPage() ([]byte, error) {
 	if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
 		return payload, err
 	}
-	fmt.Printf("headerType: %v\n", headerType)
 	var granulePosition uint64
 	if err := binary.Read(i.stream, binary.LittleEndian, &granulePosition); err != err {
 		return payload, err
 	}
-	fmt.Printf("i.granulePosition: %v\n", granulePosition)
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.serial); err != err {
 		return payload, err
 	}
-	fmt.Printf("i.serial: %v\n", i.serial)
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.pageIndex); err != err {
 		return payload, err
 	}
-	fmt.Printf("i.pageIndexl: %v\n", i.pageIndex)
 	//skipping checksum
 	io.CopyN(ioutil.Discard, i.stream, 4)
 
@@ -186,28 +182,24 @@ func (i *OpusReader) getPage() ([]byte, error) {
 	i.previousGranulePosition = granulePosition
 
 	var payloadLen uint32
+	// Iterating through all segments calculate the complete packet size
 	for x := 1; x <= int(segments); x++ {
 		var segSize uint8
 		if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
 			return payload, err
 		}
-		fmt.Printf("Seg %d size: %v\n", x, segSize)
 		payloadLen = payloadLen + uint32(segSize)
 	}
 
-	fmt.Printf("payloadLen 0: %v\n", payloadLen)
-	fmt.Printf("segments: %v\n", segments)
-
 	if i.pageIndex == 0 {
-
 		_, err := i.readOpusHead()
 		if err != nil {
-			fmt.Printf("Read Headers Error : %v\n", err)
+			return payload, err
 		}
 	} else if i.pageIndex == 1 {
 		plen, err := i.readOpusTags()
 		if err != nil {
-			fmt.Printf("ReadTags Error : %v\n", err)
+			return payload, err
 		}
 		// we are not interested in tags (metadata?)
 		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen))
@@ -215,12 +207,8 @@ func (i *OpusReader) getPage() ([]byte, error) {
 	} else {
 		tmpPacket := make([]byte, payloadLen)
 		binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
-		fmt.Printf("an audio frame\n")
-		//Reading the TOC byte - we need to know  the frame duration.
-		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
 		return tmpPacket, nil
 	}
-
 
 	return payload, nil
 }
@@ -265,6 +253,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		i.previousGranulePosition = granulePosition
 
 		var x uint8
+		// building a map of all segments
 		for x = 1; x <= i.segments; x++ {
 			var segSize uint8
 			if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
@@ -276,23 +265,19 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		i.currentSegment = 1
 	}
 	var currentPacketSize uint32
+	// Iteraring throug all segments to check if there are lacing packets. If a segment is 255 bytes long, it means that there must be a following segment for the same packet (which may be again 255 bytes long)
 	for i.segmentMap[i.currentSegment] == 255 {
-		fmt.Printf("This packet has more segments: %v    %v\n", i.currentSegment, i.segmentMap[i.currentSegment])
 		currentPacketSize += 255
 		i.currentSegment += 1
 
 	}
-
+	// Adding either the last segments of lacing ones or a packet that fits only in one segment
 	currentPacketSize += uint32(i.segmentMap[i.currentSegment])
-	fmt.Printf("Adding  packet from segment %v  size: %v \n", i.currentSegment, i.segmentMap[i.currentSegment])
 	if i.currentSegment < i.segments {
 		i.currentSegment += 1
 	} else {
 		i.currentSegment = 0
 	}
-
-	fmt.Printf("Current packet size: %v \n", currentPacketSize)
-	
 	tmpPacket := make([]byte, currentPacketSize)
 
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
@@ -300,12 +285,8 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	if len(tmpPacket) > 0 {
 		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
 		toc := tmpPacket[0] >> 3
-//		fmt.Printf("============= TOC : % 08b \n", tmpPacket[0])
-//		fmt.Printf("============= TOC Dec value : %d \n", toc)
-//		fmt.Printf("============= frameSize : %f \n", getFrameSize(uint8(toc)))
 		i.currentSampleLen = getFrameSize(uint8(toc))
 	}
-	fmt.Printf("Current segment %v \n", i.currentSegment)
 	return tmpPacket, nil
 }
 
@@ -351,7 +332,6 @@ func (i *OpusReader) GetSingleSample() ([]byte, error) {
 
 func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint32) (uint32, error) {
 	i.currentSamples = uint32(deltaGranulePosition)
-	fmt.Printf("calculating sample duration for packets: %v\n", i.currentSamples)
 	if i.sampleRate == 0 {
 		return 0, errors.New("Wrong samplerate")
 	}
@@ -364,7 +344,6 @@ func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint32) (uint3
 }
 
 func (i *OpusReader) GetCurrentSamples() uint32 {
-	fmt.Printf("current samples: %v\n", i.currentSamples)
 	return i.currentSamples
 }
 
