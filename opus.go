@@ -281,7 +281,7 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
 		toc := tmpPacket[0] >> 3
 		i.currentSampleLen = getFrameSize(uint8(toc))
-		tocStereo := hasBit(tmpPacket[0],5)
+		tocStereo := bitExtracted(tmpPacket[0],5,1)
 		fmt.Printf("Toc Stereo : %v\n", tocStereo)
 	}
 	return tmpPacket, nil
@@ -289,6 +289,10 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 func hasBit(n byte, pos uint8) bool {
     val := n & (1 << pos)
     return (val > 0)
+}
+func bitExtracted(inp byte, k uint8, p uint8) uint8{
+
+    return (((1 << k) - 1) & (inp >> (p - 1)))
 }
 
 //Returns Frame size in ms based on Configuration number
