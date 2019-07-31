@@ -12,7 +12,9 @@ import (
 	"io/ioutil"
 	"os"
 )
+
 const DEFAULT_BUFFER_FOR_PLAYBACK_MS = 2500
+
 // OpusReader is used to take an OGG file and write RTP packets
 type OpusReader struct {
 	stream                  io.Reader
@@ -24,6 +26,7 @@ type OpusReader struct {
 	checksumTable           *crc32.Table
 	previousGranulePosition uint64
 	currentSampleLen        float32
+	CurrentSampleDuration   uint32
 	currentSamples          uint32
 	currentSegment          uint8
 	segments                uint8
@@ -286,34 +289,34 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 			frames = 1
 			break
 		case 1:
-		case 2: 
-			frames =2
+		case 2:
+			frames = 2
 			break
 		default:
-			frames =  tmpPacket[1] & 63
+			frames = tmpPacket[1] & 63
 			break
 		}
 		tocConfig := tmpPacket[0] >> 3
 
 		var length uint32
 		length = uint32(tocConfig & 3)
-		if (tocConfig >= 16) {
-		    length = DEFAULT_BUFFER_FOR_PLAYBACK_MS << length
-		} else if (tocConfig >= 12) {
-		    length = 10000 << (length & 1)
-		} else if (length == 3) {
-		    length = 60000
+		if tocConfig >= 16 {
+			length = DEFAULT_BUFFER_FOR_PLAYBACK_MS << length
+		} else if tocConfig >= 12 {
+			length = 10000 << (length & 1)
+		} else if length == 3 {
+			length = 60000
 		} else {
-		    length = 10000 << length
+			length = 10000 << length
 		}
 
 		i.currentSampleLen = getFrameSize(uint8(tocConfig))
 		duration := uint32(frames) * length
-		fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
+		//	fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
+		i.CurrentSampleDuration = duration
 	}
 	return tmpPacket, nil
 }
-
 
 //Returns Frame size in ms based on Configuration number
 func getFrameSize(toc uint8) float32 {
