@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 	"os"
 )
-
+const DEFAULT_BUFFER_FOR_PLAYBACK_MS = 2500
 // OpusReader is used to take an OGG file and write RTP packets
 type OpusReader struct {
 	stream                  io.Reader
@@ -279,17 +279,38 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 	//Reading the TOC byte - we need to know  the frame duration.
 	if len(tmpPacket) > 0 {
 		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
-		toc := tmpPacket[0] >> 3
-		i.currentSampleLen = getFrameSize(uint8(toc))
-		tmptoc := tmpPacket[0] & 255;
-		tocType := tmptoc & 3
-		fmt.Printf("TOC type: %v\n", tocType)
+		tmptoc := tmpPacket[0] & 255
+		var frames uint8
+		switch tmptoc & 3 {
+		case 0:
+			frames = 1
+			break
+		case 1:
+		case 2: 
+			frames =2
+			break
+		default:
+			frames =  tmpPacket[1] & 63
+			break
+		}
+		tocConfig := tmpPacket[0] >> 3
+
+		var length uint32
+		length = uint32(tocConfig & 3)
+		if (tocConfig >= 16) {
+		    length = DEFAULT_BUFFER_FOR_PLAYBACK_MS << length
+		} else if (tocConfig >= 12) {
+		    length = 10000 << (length & 1)
+		} else if (length == 3) {
+		    length = 60000
+		} else {
+		    length = 10000 << length
+		}
+
+		i.currentSampleLen = getFrameSize(uint8(tocConfig))
+		fmt.Printf("Len: %v   Frames: %v\n", length, frames)
 	}
 	return tmpPacket, nil
-}
-func hasBit(n byte, pos uint8) bool {
-    val := n & (1 << pos)
-    return (val > 0)
 }
 
 
