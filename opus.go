@@ -308,7 +308,8 @@ func (i *OpusReader) getPageSingle() ([]byte, error) {
 		}
 
 		i.currentSampleLen = getFrameSize(uint8(tocConfig))
-		fmt.Printf("Len: %v   Frames: %v\n", length, frames)
+		duration := uint32(frames) * length
+		fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
 	}
 	return tmpPacket, nil
 }
