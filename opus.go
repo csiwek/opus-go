@@ -190,7 +190,7 @@ func (i *OpusReader) getPage() error {
 			return err
 		}
 		// we are not interested in tags (metadata?)
-		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen-plen))
+		io.CopyN(ioutil.Discard, i.stream, int64(plen))
 
 	} else {
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen))
