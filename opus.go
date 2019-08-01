@@ -47,6 +47,7 @@ func NewFile(fileName string) (*OpusReader, error) {
 	//}
 	reader.fd = f
 	reader.stream = bufio.NewReader(f)
+	fmt.Println("================ Init map 0")
 	err = reader.getPage()
 	fmt.Println("================ Init map 1")
 	if err != nil {
