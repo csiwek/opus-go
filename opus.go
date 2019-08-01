@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -105,30 +104,25 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 		return 0, err
 	}
 	if bytes.Compare(magic, []byte("OpusTags")) != 0 {
-		fmt.Printf("Incorrect magic \"OpusTags\" : %s %v\n", string(magic), hex.EncodeToString(magic))
 		return 0, errors.New("Wrong Opus Tags")
 	}
 
 	if err := binary.Read(i.stream, binary.LittleEndian, &vendorLen); err != err {
 		return 0, err
 	}
-	fmt.Printf("VendorLen: %v\n", vendorLen)
 	vendorName := make([]byte, vendorLen)
 	if err := binary.Read(i.stream, binary.LittleEndian, &vendorName); err != err {
 		return 0, err
 	}
-	fmt.Printf("Vendor Name: %v\n", string(vendorName))
 
 	var userCommentLen uint32
 	if err := binary.Read(i.stream, binary.LittleEndian, &userCommentLen); err != err {
 		return 0, err
 	}
-	fmt.Printf("userCommentLen: %v\n", userCommentLen)
 	userComment := make([]byte, userCommentLen)
 	if err := binary.Read(i.stream, binary.LittleEndian, &userComment); err != err {
 		return 0, err
 	}
-	fmt.Printf("UserComment: %v\n", string(userComment))
 	plen = 16 + vendorLen + userCommentLen
 	return plen, nil
 
@@ -140,7 +134,7 @@ func (i *OpusReader) getPageHead() error {
 		return err
 	}
 	if bytes.Compare(head, []byte("OggS")) != 0 {
-		return fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
+		return fmt.Errorf("Incorrect page. Does not start with \"OggS\"")
 	}
 	//Skipping Version
 	io.CopyN(ioutil.Discard, i.stream, 1)
@@ -172,6 +166,7 @@ func (i *OpusReader) getPageHead() error {
 		if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
 			return err
 		}
+		fmt.Printf("seg %v  - > %v \n", x, segSize)
 		i.segmentMap[x] = segSize
 		i.payloadLen += uint32(segSize)
 	}
