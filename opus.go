@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -134,7 +135,7 @@ func (i *OpusReader) getPageHead() error {
 		return err
 	}
 	if bytes.Compare(head, []byte("OggS")) != 0 {
-		return fmt.Errorf("Incorrect page. Does not start with \"OggS\"")
+		return fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
 	}
 	//Skipping Version
 	io.CopyN(ioutil.Discard, i.stream, 1)
