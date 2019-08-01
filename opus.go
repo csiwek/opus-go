@@ -29,6 +29,7 @@ type OpusReader struct {
 	CurrentSampleDuration   uint32
 	currentSamples          uint32
 	currentSegment          uint8
+	payloadLen              uint32
 	segments                uint8
 	currentSample           uint8
 	segmentMap              map[uint8]uint8
@@ -47,11 +48,11 @@ func NewFile(fileName string) (*OpusReader, error) {
 	//}
 	reader.fd = f
 	reader.stream = bufio.NewReader(f)
-	_, err = reader.getPage()
+	err = reader.getPage()
 	if err != nil {
 		return reader, err
 	}
-	_, err = reader.getPage()
+	err = reader.getPage()
 	if err != nil {
 		return reader, err
 	}
@@ -59,57 +60,41 @@ func NewFile(fileName string) (*OpusReader, error) {
 	return reader, nil
 }
 
-func (i *OpusReader) readOpusHead() (uint32, error) {
-	var plen uint32
+func (i *OpusReader) readOpusHead() error {
 	var version uint8
 	magic := make([]byte, 8)
 	if err := binary.Read(i.stream, binary.LittleEndian, &magic); err != err {
-		return 0, err
+		return err
 	}
 	if bytes.Compare(magic, []byte("OpusHead")) != 0 {
-		return 0, errors.New("Wrong Opus Head")
+		return errors.New("Wrong Opus Head")
 	}
 
 	if err := binary.Read(i.stream, binary.LittleEndian, &version); err != err {
-		return 0, err
+		return err
 	}
-	plen += 1
-	fmt.Printf("Version: %v\n", version)
 	var channels uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &channels); err != err {
-		return 0, err
+		return err
 	}
-
-	fmt.Printf("Channels: %v\n", channels)
-
 	var preSkip uint16
 	if err := binary.Read(i.stream, binary.LittleEndian, &preSkip); err != err {
-		return 0, err
+		return err
 	}
-	plen += 2
-	fmt.Printf("preSkip: %v\n", preSkip)
-
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.sampleRate); err != err {
-		return 0, err
+		return err
 	}
-	plen += 4
-	fmt.Printf("SamlpleRate: %v\n", i.sampleRate)
 	//Skipping OutputGain
 	io.CopyN(ioutil.Discard, i.stream, 2)
-	plen += 2
 	var channelMap uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &channelMap); err != err {
-		return 0, err
+		return err
 	}
-	plen += 2
-	fmt.Printf("ChannelMap : %v\n", channelMap)
 	//if channelMap (Mapping family) is different than 0, next 4 bytes contain channel mapping configuration
-
 	if channelMap != 0 {
 		io.CopyN(ioutil.Discard, i.stream, 4)
-		plen += 4
 	}
-	return plen, nil
+	return nil
 }
 
 func (i *OpusReader) readOpusTags() (uint32, error) {
@@ -149,118 +134,86 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 
 }
 
-func (i *OpusReader) getPage() ([]byte, error) {
-	payload := make([]byte, 1)
+func (i *OpusReader) getPageHead() error {
 	head := make([]byte, 4)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
-		return payload, err
+		return err
 	}
 	if bytes.Compare(head, []byte("OggS")) != 0 {
-		return payload, fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
+		return fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
 	}
 	//Skipping Version
 	io.CopyN(ioutil.Discard, i.stream, 1)
 	var headerType uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
-		return payload, err
+		return err
 	}
 	var granulePosition uint64
 	if err := binary.Read(i.stream, binary.LittleEndian, &granulePosition); err != err {
-		return payload, err
+		return err
 	}
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.serial); err != err {
-		return payload, err
+		return err
 	}
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.pageIndex); err != err {
-		return payload, err
+		return err
 	}
 	//skipping checksum
 	io.CopyN(ioutil.Discard, i.stream, 4)
 
-	var segments uint8
-	if err := binary.Read(i.stream, binary.LittleEndian, &segments); err != err {
-		return payload, err
+	if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
+		return err
 	}
-
-	i.previousGranulePosition = granulePosition
-
-	var payloadLen uint32
-	// Iterating through all segments calculate the complete packet size
-	for x := 1; x <= int(segments); x++ {
+	var x uint8
+	// building a map of all segments
+	i.payloadLen = 0
+	for x = 1; x <= i.segments; x++ {
 		var segSize uint8
 		if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
-			return payload, err
+			return err
 		}
-		payloadLen = payloadLen + uint32(segSize)
+		i.segmentMap[x] = segSize
+		i.payloadLen += uint32(segSize)
+	}
+	i.currentSegment = 1
+	return nil
+}
+
+func (i *OpusReader) getPage() error {
+	err := i.getPageHead()
+	if err != nil {
+		return err
+
 	}
 
 	if i.pageIndex == 0 {
-		_, err := i.readOpusHead()
+		err := i.readOpusHead()
 		if err != nil {
-			return payload, err
+			return err
 		}
 	} else if i.pageIndex == 1 {
 		plen, err := i.readOpusTags()
 		if err != nil {
-			return payload, err
+			return err
 		}
 		// we are not interested in tags (metadata?)
-		io.CopyN(ioutil.Discard, i.stream, int64(payloadLen-plen))
+		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen-plen))
 
 	} else {
-		tmpPacket := make([]byte, payloadLen)
-		binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
-		return tmpPacket, nil
+		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen))
 	}
 
-	return payload, nil
+	return nil
 }
 
-func (i *OpusReader) getPageSingle() ([]byte, error) {
+func (i *OpusReader) getPageSample() ([]byte, error) {
 	if i.currentSegment == 0 {
-		payload := make([]byte, 1)
-		head := make([]byte, 4)
-		if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
-			return payload, err
-		}
-		if bytes.Compare(head, []byte("OggS")) != 0 {
-			return payload, fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
-		}
-		//Skipping Version
-		io.CopyN(ioutil.Discard, i.stream, 1)
-		var headerType uint8
-		if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
-			return payload, err
-		}
-		var granulePosition uint64
-		if err := binary.Read(i.stream, binary.LittleEndian, &granulePosition); err != err {
-			return payload, err
-		}
-		if err := binary.Read(i.stream, binary.LittleEndian, &i.serial); err != err {
-			return payload, err
-		}
-		if err := binary.Read(i.stream, binary.LittleEndian, &i.pageIndex); err != err {
-			return payload, err
-		}
-		//skipping checksum
-		io.CopyN(ioutil.Discard, i.stream, 4)
 
-		if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
-			return payload, err
-		}
-		i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
-		i.previousGranulePosition = granulePosition
+		err := i.getPageHead()
+		if err != nil {
+			return []byte(""), err
 
-		var x uint8
-		// building a map of all segments
-		for x = 1; x <= i.segments; x++ {
-			var segSize uint8
-			if err := binary.Read(i.stream, binary.LittleEndian, &segSize); err != err {
-				return payload, err
-			}
-			i.segmentMap[x] = segSize
 		}
-		i.currentSegment = 1
 	}
 	var currentPacketSize uint32
 	// Iteraring throug all segments to check if there are lacing packets. If a segment is 255 bytes long, it means that there must be a following segment for the same packet (which may be again 255 bytes long)
@@ -340,17 +293,8 @@ func getFrameSize(toc uint8) float32 {
 
 }
 
-func (i *OpusReader) GetSample() ([]byte, error) {
-	payload, err := i.getPage()
-	if err != nil {
-		return nil, err
-	}
-
-	return payload, nil
-}
-
 func (i *OpusReader) GetSingleSample() ([]byte, error) {
-	payload, err := i.getPageSingle()
+	payload, err := i.getPageSample()
 	if err != nil {
 		return nil, err
 	}
