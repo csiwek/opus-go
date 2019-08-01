@@ -182,14 +182,14 @@ func (i *OpusReader) getPage() error {
 	err := i.getPageHead()
 	if err != nil {
 		return err
-
 	}
-
+	fmt.Println("getPage 1")
 	if i.pageIndex == 0 {
 		err := i.readOpusHead()
 		if err != nil {
 			return err
 		}
+		fmt.Println("getPage 2")
 	} else if i.pageIndex == 1 {
 		plen, err := i.readOpusTags()
 		if err != nil {
@@ -198,6 +198,7 @@ func (i *OpusReader) getPage() error {
 		// we are not interested in tags (metadata?)
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen-plen))
 
+		fmt.Println("getPage 3")
 	} else {
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen))
 	}
