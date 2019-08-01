@@ -48,14 +48,16 @@ func NewFile(fileName string) (*OpusReader, error) {
 	reader.fd = f
 	reader.stream = bufio.NewReader(f)
 	err = reader.getPage()
+	fmt.Println("================ Init map 1")
 	if err != nil {
 		return reader, err
 	}
 	err = reader.getPage()
+	fmt.Println("================ Init map 2")
 	if err != nil {
 		return reader, err
 	}
-	fmt.Println("================ Init map")
+	fmt.Println("================ Init map 3")
 	reader.segmentMap = make(map[uint8]uint8)
 	return reader, nil
 }
