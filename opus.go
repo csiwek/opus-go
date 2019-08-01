@@ -46,6 +46,7 @@ func NewFile(fileName string) (*OpusReader, error) {
 	//        return nil, err
 	//}
 	reader.fd = f
+	reader.segmentMap = make(map[uint8]uint8)
 	reader.stream = bufio.NewReader(f)
 	fmt.Println("================ Init map 0")
 	err = reader.getPage()
@@ -59,7 +60,6 @@ func NewFile(fileName string) (*OpusReader, error) {
 		return reader, err
 	}
 	fmt.Println("================ Init map 3")
-	reader.segmentMap = make(map[uint8]uint8)
 	return reader, nil
 }
 
@@ -133,15 +133,18 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 }
 
 func (i *OpusReader) getPageHead() error {
+	fmt.Println("getPageHead 1")
 	head := make([]byte, 4)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
 		return err
 	}
+	fmt.Println("getPageHead 2")
 	if bytes.Compare(head, []byte("OggS")) != 0 {
 		return fmt.Errorf("Incorrect page. Does not start with \"OggS\"")
 	}
 	//Skipping Version
 	io.CopyN(ioutil.Discard, i.stream, 1)
+	fmt.Println("getPageHead 3")
 	var headerType uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
 		return err
