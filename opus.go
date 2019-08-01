@@ -191,10 +191,11 @@ func (i *OpusReader) getPage() error {
 			return err
 		}
 		// we are not interested in tags (metadata?)
-		fmt.Printf(" payloadlen : %v, plen: %v\n", i.payloadLen, plen)
+		fmt.Printf(" discard %v\n", i.payloadLen-plen)
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen-plen))
 
 	} else {
+		fmt.Printf(" discard %v\n", i.payloadLen)
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen))
 	}
 
