@@ -48,18 +48,14 @@ func NewFile(fileName string) (*OpusReader, error) {
 	reader.fd = f
 	reader.segmentMap = make(map[uint8]uint8)
 	reader.stream = bufio.NewReader(f)
-	fmt.Println("================ Init map 0")
 	err = reader.getPage()
-	fmt.Println("================ Init map 1")
 	if err != nil {
 		return reader, err
 	}
 	err = reader.getPage()
-	fmt.Println("================ Init map 2")
 	if err != nil {
 		return reader, err
 	}
-	fmt.Println("================ Init map 3")
 	return reader, nil
 }
 
@@ -133,18 +129,15 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 }
 
 func (i *OpusReader) getPageHead() error {
-	fmt.Println("getPageHead 1")
 	head := make([]byte, 4)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
 		return err
 	}
-	fmt.Println("getPageHead 2")
 	if bytes.Compare(head, []byte("OggS")) != 0 {
 		return fmt.Errorf("Incorrect page. Does not start with \"OggS\"")
 	}
 	//Skipping Version
 	io.CopyN(ioutil.Discard, i.stream, 1)
-	fmt.Println("getPageHead 3")
 	var headerType uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
 		return err
@@ -186,13 +179,11 @@ func (i *OpusReader) getPage() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("getPage 1")
 	if i.pageIndex == 0 {
 		err := i.readOpusHead()
 		if err != nil {
 			return err
 		}
-		fmt.Println("getPage 2")
 	} else if i.pageIndex == 1 {
 		plen, err := i.readOpusTags()
 		if err != nil {
@@ -201,7 +192,6 @@ func (i *OpusReader) getPage() error {
 		// we are not interested in tags (metadata?)
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen-plen))
 
-		fmt.Println("getPage 3")
 	} else {
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen))
 	}
