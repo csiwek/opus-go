@@ -37,8 +37,11 @@ type OpusReader struct {
 	segmentMap              map[uint8]uint8
 }
 
-type OpusSample struct {
-	Payload []byte
+type OpusSamples struct {
+	Payload  []byte
+	Frames   uint8
+	Samples  uint32
+	Duration uint32
 }
 
 // New builds a new OGG Opus reader
@@ -176,8 +179,6 @@ func (i *OpusReader) getPageHead() error {
 		i.segmentMap[x] = segSize
 		i.payloadLen += uint32(segSize)
 	}
-	i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
-	i.previousGranulePosition = granulePosition
 
 	return nil
 }
@@ -207,12 +208,13 @@ func (i *OpusReader) getPage() error {
 	return nil
 }
 
-func (i *OpusReader) getPageSample() ([]byte, error) {
+func (i *OpusReader) GetSample() (*OpusSamples, error) {
+	opusSamples := new(OpusSamples)
 	if i.currentSegment == 0 {
 
 		err := i.getPageHead()
 		if err != nil {
-			return []byte(""), err
+			return opusSamples, err
 
 		}
 	}
@@ -231,7 +233,7 @@ func (i *OpusReader) getPageSample() ([]byte, error) {
 		i.currentSegment = 0
 	}
 	tmpPacket := make([]byte, currentPacketSize)
-
+	opusSamples.Payload = tmpPacket
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	//Reading the TOC byte - we need to know  the frame duration.
 	if len(tmpPacket) > 0 {
@@ -250,6 +252,7 @@ func (i *OpusReader) getPageSample() ([]byte, error) {
 			frames = tmpPacket[1] & 63
 			break
 		}
+		opusSamples.Frames = frames
 		tocConfig := tmpPacket[0] >> 3
 
 		var length uint32
@@ -263,73 +266,13 @@ func (i *OpusReader) getPageSample() ([]byte, error) {
 		} else {
 			length = 10000 << length
 		}
-
-		i.currentSampleLen = getFrameSize(uint8(tocConfig))
-		fmt.Printf("Frames size: %v \n", i.currentSampleLen)
+		opusSamples.Duration = length
 		duration := uint32(frames) * length
-		fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
-		i.CurrentSampleDuration = duration
-		i.CurrentSampleLen = length
 		if duration > 0 {
-			i.CurrentFrames = 48000 / (1000000 / length)
+			opusSamples.Samples = 48000 / (1000000 / length)
 		} else {
-			i.CurrentFrames = 0
+			opusSamples.Samples = 0
 		}
-		fmt.Printf("Frames: %v \n", i.CurrentFrames)
 	}
-	return tmpPacket, nil
-}
-
-//Returns Frame size in ms based on Configuration number
-func getFrameSize(toc uint8) float32 {
-	var frameSize float32
-	// https://tools.ietf.org/html/rfc6716
-	switch toc {
-	case 16, 20, 24, 28:
-		frameSize = 2.5
-	case 17, 21, 25, 29:
-		frameSize = 5
-	case 0, 4, 8, 12, 14, 18, 22, 26, 30:
-		frameSize = 10
-	case 1, 5, 9, 13, 15, 19, 23, 27, 31:
-		frameSize = 20
-	case 2, 6, 10:
-		frameSize = 40
-	case 3, 7, 11:
-		frameSize = 60
-	}
-	return frameSize
-
-}
-
-func (i *OpusReader) GetSingleSample() ([]byte, error) {
-	payload, err := i.getPageSample()
-	if err != nil {
-		return nil, err
-	}
-
-	return payload, nil
-}
-
-func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint32) (uint32, error) {
-	i.currentSamples = uint32(deltaGranulePosition)
-	fmt.Printf("Current Samples %v\n", i.currentSamples)
-	if i.sampleRate == 0 {
-		return 0, errors.New("Wrong samplerate")
-	}
-	if i.segments == 0 {
-		return 0, errors.New("Wrong number of segments")
-	}
-
-	deltaTime := i.currentSamples * 1000 / i.sampleRate / uint32(i.segments)
-	return uint32(deltaTime), nil
-}
-
-func (i *OpusReader) GetCurrentSamples() uint32 {
-	return i.currentSamples
-}
-
-// Returns duration in ms of current sample
-func (i *OpusReader) GetCurrentSampleDuration() float32 {
-	return i.currentSampleLen
+	return opusSamples, nil
 }
