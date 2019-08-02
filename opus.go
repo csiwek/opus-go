@@ -85,6 +85,7 @@ func (i *OpusReader) readOpusHead() error {
 		return err
 	}
 	//Skipping OutputGain
+	fmt.Printf("1 discard %v\n", 2)
 	io.CopyN(ioutil.Discard, i.stream, 2)
 	var channelMap uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &channelMap); err != err {
@@ -92,6 +93,7 @@ func (i *OpusReader) readOpusHead() error {
 	}
 	//if channelMap (Mapping family) is different than 0, next 4 bytes contain channel mapping configuration
 	if channelMap != 0 {
+		fmt.Printf("2 discard %v\n", 4)
 		io.CopyN(ioutil.Discard, i.stream, 4)
 	}
 	return nil
@@ -124,7 +126,7 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 	if err := binary.Read(i.stream, binary.LittleEndian, &userComment); err != err {
 		return 0, err
 	}
-	plen = vendorLen + userCommentLen
+	plen = 16 + vendorLen + userCommentLen
 	return plen, nil
 
 }
@@ -138,6 +140,7 @@ func (i *OpusReader) getPageHead() error {
 		return fmt.Errorf("Incorrect page. Does not start with \"OggS\" : %s %v", string(head), hex.EncodeToString(head))
 	}
 	//Skipping Version
+	fmt.Printf("3 discard %v\n", 1)
 	io.CopyN(ioutil.Discard, i.stream, 1)
 	var headerType uint8
 	if err := binary.Read(i.stream, binary.LittleEndian, &headerType); err != err {
@@ -154,6 +157,7 @@ func (i *OpusReader) getPageHead() error {
 		return err
 	}
 	//skipping checksum
+	fmt.Printf("4 discard %v\n", 4)
 	io.CopyN(ioutil.Discard, i.stream, 4)
 
 	if err := binary.Read(i.stream, binary.LittleEndian, &i.segments); err != err {
@@ -191,11 +195,11 @@ func (i *OpusReader) getPage() error {
 			return err
 		}
 		// we are not interested in tags (metadata?)
-		fmt.Printf(" discard %v\n", i.payloadLen-plen)
+		fmt.Printf("5 discard %v\n", i.payloadLen-plen)
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen-plen))
 
 	} else {
-		fmt.Printf(" discard %v\n", i.payloadLen)
+		fmt.Printf("6 discard %v\n", i.payloadLen)
 		io.CopyN(ioutil.Discard, i.stream, int64(i.payloadLen))
 	}
 
