@@ -124,7 +124,7 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 	if err := binary.Read(i.stream, binary.LittleEndian, &userComment); err != err {
 		return 0, err
 	}
-	plen = 16 + vendorLen + userCommentLen
+	plen = vendorLen + userCommentLen
 	return plen, nil
 
 }
