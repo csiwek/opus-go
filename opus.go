@@ -262,7 +262,11 @@ func (i *OpusReader) getPageSample() ([]byte, error) {
 		//fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
 		i.CurrentSampleDuration = duration
 		i.CurrentSampleLen = length
-		i.CurrentFrames = 48000 / 1000000 / duration
+		if duration > 0 {
+			i.CurrentFrames = 48000 / 1000000 / duration
+		} else {
+			i.CurrentFrames = 0
+		}
 		fmt.Printf("Frames: %v \n", i.CurrentFrames)
 	}
 	return tmpPacket, nil
