@@ -178,7 +178,6 @@ func (i *OpusReader) getPageHead() error {
 		i.segmentMap[x] = segSize
 		i.payloadLen += uint32(segSize)
 	}
-	i.currentSegment = 1
 	return nil
 }
 
