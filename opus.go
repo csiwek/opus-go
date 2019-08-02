@@ -207,6 +207,7 @@ func (i *OpusReader) getPage() error {
 }
 
 func (i *OpusReader) getPageSample() ([]byte, error) {
+	fmt.Printf("Current segment: %v\n", i.currentSegment)
 	if i.currentSegment == 0 {
 
 		err := i.getPageHead()
