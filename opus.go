@@ -61,6 +61,7 @@ func NewFile(fileName string) (*OpusReader, error) {
 }
 
 func (i *OpusReader) readOpusHead() error {
+	fmt.Println("readOpusHead")
 	var version uint8
 	magic := make([]byte, 8)
 	if err := binary.Read(i.stream, binary.LittleEndian, &magic); err != err {
@@ -100,6 +101,7 @@ func (i *OpusReader) readOpusHead() error {
 }
 
 func (i *OpusReader) readOpusTags() (uint32, error) {
+	fmt.Println("readOpusTags")
 	var plen uint32
 	var vendorLen uint32
 	magic := make([]byte, 8)
@@ -132,6 +134,7 @@ func (i *OpusReader) readOpusTags() (uint32, error) {
 }
 
 func (i *OpusReader) getPageHead() error {
+	fmt.Println("getPageHead")
 	head := make([]byte, 4)
 	if err := binary.Read(i.stream, binary.LittleEndian, &head); err != err {
 		return err
@@ -180,6 +183,7 @@ func (i *OpusReader) getPageHead() error {
 }
 
 func (i *OpusReader) getPage() error {
+	fmt.Println("getPage")
 	err := i.getPageHead()
 	if err != nil {
 		return err
@@ -207,6 +211,7 @@ func (i *OpusReader) getPage() error {
 }
 
 func (i *OpusReader) getPageSample() ([]byte, error) {
+	fmt.Println("getPageSample")
 	fmt.Printf("Current segment: %v\n", i.currentSegment)
 	if i.currentSegment == 0 {
 
