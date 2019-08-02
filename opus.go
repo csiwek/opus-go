@@ -176,6 +176,9 @@ func (i *OpusReader) getPageHead() error {
 		i.segmentMap[x] = segSize
 		i.payloadLen += uint32(segSize)
 	}
+	i.calculateSampleDuration(uint32(granulePosition - i.previousGranulePosition))
+	i.previousGranulePosition = granulePosition
+
 	return nil
 }
 
@@ -310,6 +313,7 @@ func (i *OpusReader) GetSingleSample() ([]byte, error) {
 
 func (i *OpusReader) calculateSampleDuration(deltaGranulePosition uint32) (uint32, error) {
 	i.currentSamples = uint32(deltaGranulePosition)
+	fmt.Printf("Current Samples %v\n", i.currentSamples)
 	if i.sampleRate == 0 {
 		return 0, errors.New("Wrong samplerate")
 	}
