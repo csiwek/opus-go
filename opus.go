@@ -37,6 +37,10 @@ type OpusReader struct {
 	segmentMap              map[uint8]uint8
 }
 
+type OpusSample struct {
+	Payload []byte
+}
+
 // New builds a new OGG Opus reader
 func NewFile(fileName string) (*OpusReader, error) {
 	f, err := os.Open(fileName)
@@ -258,6 +262,7 @@ func (i *OpusReader) getPageSample() ([]byte, error) {
 		}
 
 		i.currentSampleLen = getFrameSize(uint8(tocConfig))
+		fmt.Printf("Frames size: %v \n", i.currentSampleLen)
 		duration := uint32(frames) * length
 		fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
 		i.CurrentSampleDuration = duration
