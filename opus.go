@@ -27,6 +27,7 @@ type OpusReader struct {
 	previousGranulePosition uint64
 	currentSampleLen        float32
 	CurrentSampleDuration   uint32
+	CurrentFrames           uint32
 	currentSamples          uint32
 	currentSegment          uint8
 	payloadLen              uint32
@@ -258,11 +259,8 @@ func (i *OpusReader) getPageSample() ([]byte, error) {
 		i.currentSampleLen = getFrameSize(uint8(tocConfig))
 		duration := uint32(frames) * length
 		fmt.Printf("Len: %v   Frames: %v , Dration :%v\n", length, frames, duration)
-		if frames == 0 {
-			i.CurrentSampleDuration = 0
-		} else {
-			i.CurrentSampleDuration = length - 500
-		}
+		i.CurrentSampleDuration = duration
+		i.CurrentFrames = uint32(frames)
 	}
 	return tmpPacket, nil
 }
