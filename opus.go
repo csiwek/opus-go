@@ -19,7 +19,7 @@ const DEFAULT_BUFFER_FOR_PLAYBACK_MS = 2500
 type OpusReader struct {
 	stream                  io.Reader
 	fd                      *os.File
-	sampleRate              uint32
+	SampleRate              uint32
 	Channels                uint8
 	serial                  uint32
 	pageIndex               uint32
@@ -89,7 +89,7 @@ func (i *OpusReader) readOpusHead() error {
 	if err := binary.Read(i.stream, binary.LittleEndian, &preSkip); err != err {
 		return err
 	}
-	if err := binary.Read(i.stream, binary.LittleEndian, &i.sampleRate); err != err {
+	if err := binary.Read(i.stream, binary.LittleEndian, &i.SampleRate); err != err {
 		return err
 	}
 	//Skipping OutputGain
