@@ -273,6 +273,5 @@ func (i *OpusReader) GetSample() (*OpusSamples, error) {
 			opusSamples.Samples = 0
 		}
 	}
-	fmt.Printf("Frames : %v  Samples : %v    Duration:  %v\n", opusSamples.Frames, opusSamples.Samples, opusSamples.Duration)
 	return opusSamples, nil
 }
