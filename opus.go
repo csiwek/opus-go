@@ -20,7 +20,7 @@ type OpusReader struct {
 	stream                  io.Reader
 	fd                      *os.File
 	sampleRate              uint32
-	channelCount            uint16
+	Channels                uint8
 	serial                  uint32
 	pageIndex               uint32
 	checksumTable           *crc32.Table
@@ -82,8 +82,7 @@ func (i *OpusReader) readOpusHead() error {
 	if err := binary.Read(i.stream, binary.LittleEndian, &version); err != err {
 		return err
 	}
-	var channels uint8
-	if err := binary.Read(i.stream, binary.LittleEndian, &channels); err != err {
+	if err := binary.Read(i.stream, binary.LittleEndian, &i.Channels); err != err {
 		return err
 	}
 	var preSkip uint16
