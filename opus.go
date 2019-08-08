@@ -267,8 +267,7 @@ func (i *OpusReader) GetSample() (*OpusSamples, error) {
 			length = 10000 << length
 		}
 		opusSamples.Duration = length
-		duration := uint32(frames) * length
-		if duration > 0 {
+		if opusSamples.Duration > 0 {
 			opusSamples.Samples = 48000 / (1000000 / length)
 		} else {
 			opusSamples.Samples = 0
