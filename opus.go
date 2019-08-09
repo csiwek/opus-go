@@ -250,7 +250,7 @@ func (i *OpusReader) GetSample() (*OpusSamples, error) {
 			break
 		}
 		opusSamples.Frames = frames
-		tocConfig := tmpPacket[0] >> 3
+		tocConfig := tmptoc >> 3
 
 		var length uint32
 		length = uint32(tocConfig & 3)
