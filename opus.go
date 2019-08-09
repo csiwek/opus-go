@@ -26,7 +26,6 @@ type OpusReader struct {
 	checksumTable           *crc32.Table
 	previousGranulePosition uint64
 	currentSampleLen        float32
-	CurrentSampleDuration   uint32
 	CurrentSampleLen        uint32
 	CurrentFrames           uint32
 	currentSamples          uint32
@@ -236,7 +235,6 @@ func (i *OpusReader) GetSample() (*OpusSamples, error) {
 	binary.Read(i.stream, binary.LittleEndian, &tmpPacket)
 	//Reading the TOC byte - we need to know  the frame duration.
 	if len(tmpPacket) > 0 {
-		//shift 3 bits right to get a value of 5 leading bits. See https://tools.ietf.org/html/rfc6716
 		tmptoc := tmpPacket[0] & 255
 		var frames uint8
 		switch tmptoc & 3 {
@@ -266,11 +264,7 @@ func (i *OpusReader) GetSample() (*OpusSamples, error) {
 			length = 10000 << length
 		}
 		opusSamples.Duration = length
-		if opusSamples.Duration > 0 {
-			opusSamples.Samples = 48000 / (1000000 / length)
-		} else {
-			opusSamples.Samples = 0
-		}
+		opusSamples.Samples = (i.SampleRate * length) / 1000000
 	}
 	return opusSamples, nil
 }
